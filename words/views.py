@@ -1,15 +1,17 @@
+from django.http.response import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-from django import views
-import pandas
+from django.views import View
+from rest_framework.views import APIView
+from rest_framework.parsers import FileUploadParser
 
 from .forms import UploadFileForm
-from .utils import compute_tf_idf, separate_text
+from .utils import TFIDF
 
 
 @method_decorator(csrf_exempt, name='dispatch')
-class FileView(views.View):
+class TFIDFView(View):
     def get(self, request):
         form = UploadFileForm()
         context = {
@@ -32,11 +34,7 @@ class FileView(views.View):
                 for line in uploaded_file:
                     text = text + line.decode()
 
-                words = separate_text(text)
-                words_stats: pandas.Dataframe = compute_tf_idf(words)[:50].to_dict()
-                indecies = range(len(words_stats['Word']))
-
-                result = {'words_stats': words_stats, 'indecies': indecies}
+                result = TFIDF.apply(text)        
             except:
                 error = 'Wrong file'
         else:
@@ -48,3 +46,23 @@ class FileView(views.View):
             'error': error,
         }
         return render(request, 'words/tf_idf.html', context)
+
+class FileUploadView(APIView):
+    parser_classes = (FileUploadParser,)
+
+    def post(self, request, filename, format=None):
+        form = UploadFileForm(request.POST, request.FILES)
+        if form.is_valid():
+            try:
+                uploaded_file = request.FILES['file']
+                text = ''
+                for line in uploaded_file:
+                    text = text + line.decode()
+
+                data = TFIDF.apply(text)
+                return JsonResponse(data, status=200)
+            except:
+                return JsonResponse({'errors': {'Internal Server Error': True}}, status=500)
+        else:
+            errors = form.errors.as_json()
+            return JsonResponse({'errors': errors}, status=400)

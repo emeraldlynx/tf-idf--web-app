@@ -1,7 +1,8 @@
-from django.urls import path
+from django.urls import path, re_path
 
-from .views import FileView
+from .views import TFIDFView, FileUploadView
 
 urlpatterns = [
-    path('tf-idf/', FileView.as_view(), name='tf-idf'),
+    re_path(r'^tf-idf/$', TFIDFView.as_view(), name='tf-idf'),
+    re_path(r'^api/calculate-tf-idf/(?P<filename>[^/]+)$', FileUploadView.as_view(), name='calculate-tf-idf'),
 ]
