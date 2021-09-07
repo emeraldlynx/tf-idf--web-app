@@ -1,0 +1,40 @@
+{% extends "words/wrapper.html" %}
+
+{% load custom_tags %}
+
+{% block content %}
+
+<h2>Get file TF-IDF</h2><br>
+
+<form method="post" enctype="multipart/form-data">
+    
+    {% if form %}
+        {{ form.title }}<br>
+        {{ form.file }}<br>
+        <button type="submit" class="btn btn-success">Send</button>
+        <span style="color: orangered;">{{ error }}</span>
+    {% endif %}
+
+    {% if result %}
+        <div>
+            <table>
+                <caption>Table</caption>
+                <tr>
+                    <th>Word</th>
+                    <th>TF</th>
+                    <th>TF-IDF</th>
+                </tr>
+                {% for index in result.indecies %}
+                    <tr>
+                        <td>{{ result.words_stats.Word|get_item:index }}</td>
+                        <td>{{ result.words_stats.TF|get_item:index }}</td>
+                        <td>{{ result.words_stats.TFIDF|get_item:index }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
+        </div>
+    {% endif %}
+</form>
+
+
+{% endblock %}
